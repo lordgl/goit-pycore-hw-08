@@ -8,6 +8,7 @@ from helpers import (
     validate_birthday,
     input_error,
     display_success_message,
+    display_error_message,
     validate_args_count,
     style_text,
 )
@@ -64,6 +65,8 @@ def add_contact(name: str, phone_number: str, address_book: AddressBook) -> bool
             "Invalid phone number format. It should start with '+' followed by 7-15 digits or "
             "'0' followed by 6-14 digits."
         )
+    if address_book.phone_exists(phone_number, exclude_name=name):
+        raise ValueError("Phone number already assigned to another contact.")
 
     record = address_book.find(name)
     if record is None:
@@ -89,10 +92,14 @@ def change_contact(name: str, new_phone_number: str, address_book: AddressBook) 
             "Invalid phone number format. It should start with '+' followed by 7-15 digits or "
             "'0' followed by 6-14 digits."
         )
+    if address_book.phone_exists(new_phone_number, exclude_name=name):
+        raise ValueError("Phone number already assigned to another contact.")
 
     record = address_book.find(name)
     if record is None:
         raise ValueError("Contact not found.")
+    if record.find_phone(new_phone_number):
+        raise ValueError(f"Contact {name} already has this phone number.")
 
     if not record.phones:
         add_message = record.add_phone(new_phone_number)
@@ -105,6 +112,21 @@ def change_contact(name: str, new_phone_number: str, address_book: AddressBook) 
     if update_message != "Phone number is set":
         raise ValueError(update_message)
     return True
+
+
+@input_error
+def handle_clear_all(args: list[str], address_book: AddressBook) -> None:
+    """
+    Handles the 'clear-all' command to wipe all contacts after confirmation.
+    """
+    validate_args_count(args, 0, "clear-all")
+    prompt = style_text("Type 'Yes' to delete all contacts: ", color=Fore.RED, bright=True)
+    confirmation = input(prompt)
+    if confirmation.strip().lower() == "yes":
+        address_book.clear()
+        display_success_message("All contacts deleted.")
+    else:
+        display_error_message("Clear-all cancelled.")
 
 
 @input_error

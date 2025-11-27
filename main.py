@@ -7,7 +7,13 @@ import colorama
 from colorama import Fore
 from functools import partial
 
-from helpers import parse_input, display_error_message, style_text
+from helpers import (
+    parse_input,
+    display_error_message,
+    style_text,
+    save_data,
+    load_data,
+)
 from handlers import (
     handle_hello,
     handle_add,
@@ -19,10 +25,11 @@ from handlers import (
     handle_all,
     handle_exit,
     handle_menu,
+    handle_clear_all,
 )
 from instances import AddressBook
 
-ADDRESS_BOOK = AddressBook()  # In-memory contacts database
+ADDRESS_BOOK = load_data()  # Persistent contacts database
 
 EXIT_COMMANDS = {'exit', 'close', 'bye', 'q'}
 
@@ -87,6 +94,7 @@ def main_menu() -> str:
         entry("birthdays", "List all birthdays happening in the next 7 days."),
         entry("phone [name]", "Retrieve every phone number stored for a contact."),
         entry("all", "Show the full address book."),
+        entry("clear-all", "Delete every contact after confirmation."),
         entry("exit / close / bye / q", "Leave the application gracefully."),
         entry("menu", "Show this command palette again."),
         sub_border,
@@ -136,6 +144,7 @@ COMMAND_HANDLERS = {
     'birthdays': partial(handle_birthdays, address_book=ADDRESS_BOOK),
     'phone': partial(handle_phone, address_book=ADDRESS_BOOK),
     'all': partial(handle_all, address_book=ADDRESS_BOOK),
+    'clear-all': partial(handle_clear_all, address_book=ADDRESS_BOOK),
     'menu': partial(handle_menu, menu_provider=main_menu),
 }
 
@@ -168,24 +177,28 @@ def main():
     Main function to run the command-line bot application.
     """
     colorama.init(autoreset=True)
-    display_logo()
     try:
-        input_with_spinner("Press Enter to open the command palette... ")
-    except KeyboardInterrupt:
-        print()
-        handle_exit([])
-    print()
-    print(main_menu())
-    while True:
+        display_logo()
         try:
-            user_input = input(style_text(">> ", color=Fore.BLUE, bright=True))
+            input_with_spinner("Press Enter to open the command palette... ")
         except KeyboardInterrupt:
             print()
             handle_exit([])
-        command, args = parse_input(user_input)
         print()
-        _handle_command(command, args)
-        print()
+        print(main_menu())
+        while True:
+            try:
+                user_input = input(style_text(">> ", color=Fore.BLUE, bright=True))
+            except KeyboardInterrupt:
+                print()
+                handle_exit([])
+            command, args = parse_input(user_input)
+            print()
+            _handle_command(command, args)
+            print()
+    except SystemExit:
+        save_data(ADDRESS_BOOK)
+        raise
 
 
 if __name__ == "__main__":

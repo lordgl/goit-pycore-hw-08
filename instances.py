@@ -149,6 +149,15 @@ class AddressBook(UserDict):
             return "Record deleted"
         return "Record not found"
 
+    def phone_exists(self, phone_number: str, exclude_name: str | None = None) -> bool:
+        """Check if a phone number is used by any contact except the excluded one."""
+        for name, record in self.data.items():
+            if exclude_name and name == exclude_name:
+                continue
+            if any(phone.value == phone_number for phone in record.phones):
+                return True
+        return False
+
     def upcoming_birthdays(self, days: int = 7) -> list[tuple[str, date]]:
         """
         Return contacts with birthdays within the next given number of days.

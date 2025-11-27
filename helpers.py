@@ -1,8 +1,10 @@
 from collections.abc import Iterable
 from functools import wraps
 from datetime import datetime
+import pickle
 from colorama import Fore, Style
 import re
+from instances import AddressBook
 
 
 def style_text(
@@ -119,3 +121,18 @@ def validate_birthday(birthday: str) -> bool:
     except ValueError:
         return False
     return True
+
+
+def save_data(book: AddressBook, filename: str = "addressbook.pkl") -> None:
+    """Persist address book to a pickle file."""
+    with open(filename, "wb") as file:
+        pickle.dump(book, file)
+
+
+def load_data(filename: str = "addressbook.pkl") -> AddressBook:
+    """Load address book from disk or create a new one if missing."""
+    try:
+        with open(filename, "rb") as file:
+            return pickle.load(file)
+    except FileNotFoundError:
+        return AddressBook()
