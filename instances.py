@@ -100,6 +100,13 @@ class Record:
         self.birthday = Birthday(birthday)
         return "Birthday is set"
 
+    def remove_birthday(self) -> str:
+        """Remove birthday from the record."""
+        if self.birthday is None:
+            return "Birthday not set"
+        self.birthday = None
+        return "Birthday is deleted"
+
     def days_to_birthday(self) -> int | None:
         """
         Calculate days until the next birthday.

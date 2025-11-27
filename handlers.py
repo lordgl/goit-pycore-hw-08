@@ -115,6 +115,48 @@ def change_contact(name: str, new_phone_number: str, address_book: AddressBook) 
 
 
 @input_error
+def delete_contact(name: str, address_book: AddressBook) -> bool:
+    """Deletes an entire contact."""
+    if not validate_name(name):
+        raise ValueError("Invalid name format. Name should contain only alphabetic characters.")
+    record = address_book.find(name)
+    if record is None:
+        raise ValueError("Contact not found.")
+    address_book.delete(name)
+    return True
+
+
+@input_error
+def delete_phone(name: str, phone_number: str, address_book: AddressBook) -> bool:
+    """Deletes a specific phone number from a contact."""
+    if not validate_phone_number(phone_number):
+        raise ValueError(
+            "Invalid phone number format. It should start with '+' followed by 7-15 digits or "
+            "'0' followed by 6-14 digits."
+        )
+    record = address_book.find(name)
+    if record is None:
+        raise ValueError("Contact not found.")
+    if record.remove_phone(phone_number) != "Phone number is deleted":
+        raise ValueError("Phone number not found.")
+    return True
+
+
+@input_error
+def delete_birthday(name: str, address_book: AddressBook) -> bool:
+    """Deletes a contact's birthday."""
+    if not validate_name(name):
+        raise ValueError("Invalid name format. Name should contain only alphabetic characters.")
+    record = address_book.find(name)
+    if record is None:
+        raise ValueError("Contact not found.")
+    result = record.remove_birthday()
+    if result != "Birthday is deleted":
+        raise ValueError("Birthday not set.")
+    return True
+
+
+@input_error
 def handle_clear_all(args: list[str], address_book: AddressBook) -> None:
     """
     Handles the 'clear-all' command to wipe all contacts after confirmation.
@@ -218,6 +260,39 @@ def handle_change(args: list[str], address_book: AddressBook) -> None:
     name, new_phone_number = args
     if change_contact(name, new_phone_number, address_book):
         display_success_message(f"Contact {name} updated with new phone number {new_phone_number}")
+
+
+@input_error
+def handle_delete(args: list[str], address_book: AddressBook) -> None:
+    """
+    Handles 'delete' to remove an entire contact.
+    """
+    validate_args_count(args, 1, "delete [name]")
+    name = args[0]
+    if delete_contact(name, address_book):
+        display_success_message(f"Contact {name} deleted.")
+
+
+@input_error
+def handle_delete_phone(args: list[str], address_book: AddressBook) -> None:
+    """
+    Handles 'delete-phone' to remove a phone number from a contact.
+    """
+    validate_args_count(args, 2, "delete-phone [name] [phone_number]")
+    name, phone_number = args
+    if delete_phone(name, phone_number, address_book):
+        display_success_message(f"Phone {phone_number} removed from {name}.")
+
+
+@input_error
+def handle_delete_birthday(args: list[str], address_book: AddressBook) -> None:
+    """
+    Handles 'delete-birthday' to remove a birthday from a contact.
+    """
+    validate_args_count(args, 1, "delete-birthday [name]")
+    name = args[0]
+    if delete_birthday(name, address_book):
+        display_success_message(f"Birthday removed for {name}.")
 
 
 @input_error
